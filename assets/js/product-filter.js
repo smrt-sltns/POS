@@ -74,18 +74,18 @@ $(document).ready(function(){
     });
  
 
-
+    // NOT USING THIS ONE
     var $list = $('.list-group-item').click(function () {
        $list.removeClass('active');
        $(this).addClass('active');
        if(this.id == 'check'){
             $("#cardInfo").show();
             $("#cardInfo .input-group-addon").text("Check Info");
-       }else if(this.id == 'card'){
+        }else if(this.id == 'card'){
            $("#cardInfo").show();
-           $("#cardInfo .input-group-addon").text("Card Info");
-       }else if(this.id == 'cash'){
-           $("#cardInfo").hide();
+           $("#cardInfo .input-group-addon").text("M-Pesa Code");
+        }else if(this.id == 'cash'){
+            $("#cardInfo").hide();
        }
     });
 
@@ -108,7 +108,7 @@ $(document).ready(function(){
     $.fn.calculateChange = function () {
         var change = $("#payablePrice").val() - $("#payment").val();
         if(change <= 0){
-            $("#change").text(change.toFixed(2));
+            $("#change").text(-change.toFixed(2));
         }else{
             $("#change").text('0')
         }

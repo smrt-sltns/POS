@@ -3,6 +3,7 @@ const server = require( "http" ).Server( app );
 const bodyParser = require( "body-parser" );
 const Datastore = require( "nedb" );
 const async = require( "async" );
+const inventory = require( "./inventory" );
 
 
 app.use( bodyParser.json() );
@@ -46,7 +47,15 @@ app.delete( "/category/:categoryId", function ( req, res ) {
         _id: parseInt(req.params.categoryId)
     }, function ( err, numRemoved ) {
         if ( err ) res.status( 500 ).send( err );
-        else res.sendStatus( 200 );
+        else {
+            inventory.deleteProductsByCategory(req.params.categoryId, function (itemDeletionError, numRemovedItems) {
+                if (itemDeletionError) {
+                    res.status(500).send(itemDeletionError);
+                } else {
+                    res.sendStatus(200);
+                }
+            });
+        }
     } );
 } );
 
