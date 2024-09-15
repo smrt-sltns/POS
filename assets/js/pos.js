@@ -224,7 +224,7 @@ if (auth == undefined) {
                             <div id="image"><img src="${item.img == "" ? "./assets/images/default.jpg" : img_path + item.img}" id="product_img" alt=""></div>                    
                                         <div class="text-muted m-t-5 text-center">
                                         <div class="name" id="product_name">${item.name}</div> 
-                                        <span class="sku">${item.sku}</span>
+                                        <span class="sku">${item._id}</span>
                                         <span class="stock">STOCK </span><span class="count">${item.stock == 1 ? item.quantity : 'N/A'}</span></div>
                                         <sp class="text-success text-center"><b data-plugin="counterup">${settings.symbol + item.price}</b> </sp>
                             </div>
@@ -382,7 +382,11 @@ if (auth == undefined) {
             barcodeSearch(e);
         });
 
-
+        $("#searchBarCode").on('input', function (e) {
+            if ($("#skuCode").val().length == 12) {  // 12 is the universal barcode length
+                barcodeSearch(e);
+            }
+        });
 
         $('body').on('click', '#jq-keyboard button', function (e) {
             let pressed = $(this)[0].className.split(" ");
@@ -479,12 +483,11 @@ if (auth == undefined) {
                                         $('<i>', { class: 'fa fa-minus' })
                                     )
                                 ),
-                                $('<input>', {
+                                $('<div>', {
                                     class: 'form-control',
                                     type: 'number',
-                                    value: data.quantity,
-                                    onInput: '$(this).qtInput(' + index + ')'
-                                }),
+                                    text: data.quantity, 
+                                }).val(data.quantity),
                                 $('<div>', { class: 'input-group-btn btn-xs' }).append(
                                     $('<button>', {
                                         class: 'btn btn-default btn-xs',
@@ -557,9 +560,32 @@ if (auth == undefined) {
 
 
         $.fn.qtInput = function (i) {
+            if ( !$(this).val() || $(this).val() == 0 ) return;
+            
             item = cart[i];
-            item.quantity = $(this).val();
-            $(this).renderTable(cart);
+
+            let product = allProducts.filter(function (selected) {
+                return selected._id == parseInt(item.id);
+            });
+
+            if (product[0].stock == 1) {
+
+                if ($(this).val() <= product[0].quantity) {
+
+                    item.quantity = $(this).val();
+                    $(this).renderTable(cart);
+                    
+                } else {
+                    
+                    item.quantity = product[0].quantity;
+                    $(this).renderTable(cart);
+                    Swal.fire(
+                        'No more stock!',
+                        `We only have ${product[0].quantity} stocks of ${product[0].name}`,
+                        'info'
+                    );
+                }
+            }
         }
 
 
@@ -657,7 +683,7 @@ if (auth == undefined) {
                 case 1: type = "Cheque";
                     break;
 
-                case 2: type = "Card";
+                case 2: type = "M-Pesa";
                     break;
 
                 default: type = "Cash";
@@ -701,6 +727,21 @@ if (auth == undefined) {
                     Swal.fire(
                         'Reference Required!',
                         'You either need to select a customer <br> or enter a reference!',
+                        'warning'
+                    )
+
+                    return;
+                }
+            }
+
+
+
+            if (type != 'Cash') {
+
+                if ($("#paymentInfo").val() == "") {
+                    Swal.fire(
+                        type == 'M-Pesa' ? 'M-Pesa Code Required' : 'Payment Info Required!',
+                        type == 'M-Pesa' ? 'You need to enter M-Pesa Code' : 'You need to enter Cheque Number',
                         'warning'
                     )
 
@@ -815,8 +856,8 @@ if (auth == undefined) {
                 order_type: 1,
                 items: cart,
                 date: currentTime,
-                payment_type: type,
-                payment_info: $("#paymentInfo").val(),
+                payment_type: type == 'Cash' ? 0 : 2,  // 1 is cheque
+                payment_info: type == 'Cash' ? "" : $("#paymentInfo").val(),
                 total: orderTotal,
                 paid: paid,
                 change: change,
@@ -1164,20 +1205,12 @@ if (auth == undefined) {
                     $('#current_img').text('');
 
                     loadProducts();
-                    Swal.fire({
-                        title: 'Product Saved',
-                        text: "Select an option below to continue.",
-                        icon: 'success',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Add another',
-                        cancelButtonText: 'Close'
-                    }).then((result) => {
-
-                        if (!result.value) {
-                            $("#newProduct").modal('hide');
-                        }
+                    Swal.fire(
+                        'Done!',
+                        'Product saved',
+                        'success'
+                    ).then((result) => {
+                        $("#newProduct").modal('hide');
                     });
                 }, error: function (data) {
                     console.log(data);
@@ -1206,20 +1239,12 @@ if (auth == undefined) {
                     $('#saveCategory').get(0).reset();
                     loadCategories();
                     loadProducts();
-                    Swal.fire({
-                        title: 'Category Saved',
-                        text: "Select an option below to continue.",
-                        icon: 'success',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Add another',
-                        cancelButtonText: 'Close'
-                    }).then((result) => {
-
-                        if (!result.value) {
-                            $("#newCategory").modal('hide');
-                        }
+                    Swal.fire(
+                        'Done!',
+                        'Category saved',
+                        'success'
+                    ).then((result) => {
+                        $("#newCategory").modal('hide');
                     });
                 }, error: function (data) {
                     console.log(data);
@@ -1406,6 +1431,7 @@ if (auth == undefined) {
                         type: 'DELETE',
                         success: function (result) {
                             loadCategories();
+                            loadProducts();
                             Swal.fire(
                                 'Done!',
                                 'Category deleted',
@@ -1699,7 +1725,6 @@ if (auth == undefined) {
             e.preventDefault();
             let formData = $(this).serializeObject();
 
-            console.log(formData);
 
             if (ownUserEdit) {
                 if (formData.password != atob(user.password)) {
@@ -1862,6 +1887,132 @@ if (auth == undefined) {
         });
 
 
+
+        $('#categories').on('click', '.btn-categories', function(){
+
+            if (this.id == 'all') {
+                $('#parent > div').fadeIn(450);
+            } else {
+                var $el = $('.' + this.id).fadeIn(450);
+                $('#parent > div').not($el).hide();
+            }
+     
+            $("#categories .btn-categories").removeClass("active");
+            $(this).addClass('active');
+    
+        });
+    
+     
+        function searchProducts () {        
+            $("#categories .btn-categories").removeClass("active");
+            var matcher = new RegExp($("#search").val(), 'gi');
+            $('.box').show().not(function(){
+                var nameText = $(this).find('.name').text();
+                var skuText = $(this).find('.sku').text();
+                
+                return matcher.test(nameText) || matcher.test(skuText);
+            }).hide();
+        }
+    
+        let $search = $("#search").on('input',function(){
+            searchProducts();       
+        });
+    
+    
+        $('body').on('click', '#jq-keyboard button', function(e) {
+            if($("#search").is(":focus")) {
+                searchProducts(); 
+            }          
+        });
+    
+    
+        function searchOpenOrders() {
+            var matcher = new RegExp($("#holdOrderInput").val(), 'gi');
+            $('.order').show().not(function(){
+                return matcher.test($(this).find('.ref_number').text())
+            }).hide();
+    
+        }
+    
+        var $searchHoldOrder = $("#holdOrderInput").on('input',function () {
+            searchOpenOrders();
+        });
+    
+    
+        $('body').on('click', '.holdOrderKeyboard .key', function() {
+            if($("#holdOrderInput").is(":focus")) {
+                searchOpenOrders(); 
+            }          
+        });
+     
+      
+        function searchCustomerOrders() {
+            var matcher = new RegExp($("#holdCustomerOrderInput").val(), 'gi');
+            $('.customer-order').show().not(function(){
+                return matcher.test($(this).find('.customer_name').text())
+            }).hide();
+        }
+    
+        var $searchCustomerOrder = $("#holdCustomerOrderInput").on('input',function () {
+            searchCustomerOrders();
+        });
+    
+    
+        $('body').on('click', '.customerOrderKeyboard .key', function() {
+            if($("#holdCustomerOrderInput").is(":focus")) {
+                searchCustomerOrders();
+            }          
+        });
+     
+    
+    
+        var $list = $('.list-group-item').click(function () {
+           $list.removeClass('active');
+           $(this).addClass('active');
+           if(this.id == 'check'){
+                $("#cardInfo").show();
+                $("#cardInfo .input-group-addon").text("Check Info");
+                paymentType = 1;
+            }else if(this.id == 'card'){
+               $("#cardInfo").show();
+               $("#cardInfo .input-group-addon").text("M-Pesa Code");
+               paymentType = 2;
+            }else if(this.id == 'cash'){
+                $("#cardInfo").hide();
+                paymentType = 0;
+           }
+        });
+    
+    
+        $.fn.go = function (value,isDueInput) {
+            if(isDueInput){
+                $("#refNumber").val($("#refNumber").val()+""+value)
+            }else{
+                $("#payment").val($("#payment").val()+""+value);
+                $(this).calculateChange();
+            }
+        }
+    
+    
+        $.fn.digits = function(){
+            $("#payment").val($("#payment").val()+".");
+            $(this).calculateChange();
+        }
+    
+        $.fn.calculateChange = function () {
+            var change = $("#payablePrice").val() - $("#payment").val();
+            if(change <= 0){
+                $("#change").text(-change.toFixed(2));
+            }else{
+                $("#change").text('0')
+            }
+            if(change <= 0){
+                $("#confirmPayment").show();
+            }else{
+                $("#confirmPayment").hide();
+            }
+        }
+
     });
 
 
@@ -1977,9 +2128,10 @@ function loadTransactions() {
                                 <td>${settings.symbol + trans.total}</td>
                                 <td>${trans.paid == "" ? "" : settings.symbol + trans.paid}</td>
                                 <td>${trans.change ? settings.symbol + Math.abs(trans.change).toFixed(2) : ''}</td>
-                                <td>${trans.paid == "" ? "" : trans.payment_type == 0 ? "Cash" : 'Card'}</td>
+                                <td>${trans.paid == "" ? "" : trans.payment_type == 0 ? "Cash" : 'M-Pesa'}</td>
                                 <td>${trans.till}</td>
                                 <td>${trans.user}</td>
+                                <td>${trans.payment_info ? trans.payment_info : "-"}</td>
                                 <td>${trans.paid == "" ? '<button class="btn btn-dark"><i class="fa fa-search-plus"></i></button>' : '<button onClick="$(this).viewTransaction(' + index + ')" class="btn btn-info"><i class="fa fa-search-plus"></i></button></td>'}</tr>
                     `;
 
@@ -2087,7 +2239,7 @@ function loadSoldProducts() {
         sold_list += `<tr>
             <td>${item.product}</td>
             <td>${item.qty}</td>
-            <td>${product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
+            <td>${product[0] &&  product[0].stock == 1 ? product.length > 0 ? product[0].quantity : '' : 'N/A'}</td>
             <td>${settings.symbol + (item.qty * parseFloat(item.price)).toFixed(2)}</td>
             </tr>`;
 
@@ -2148,7 +2300,7 @@ $.fn.viewTransaction = function (index) {
 
     switch (allTransactions[index].payment_type) {
 
-        case 2: type = "Card";
+        case 2: type = "M-Pesa";
             break;
 
         default: type = "Cash";

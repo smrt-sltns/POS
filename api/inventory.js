@@ -97,26 +97,33 @@ app.post( "/product", upload.single('imagename'), function ( req, res ) {
         img: image        
     }
 
-    if(req.body.id == "") { 
-        Product._id = Math.floor(Date.now() / 1000);
-        inventoryDB.insert( Product, function ( err, product ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.send( product );
-        });
-    }
-    else { 
-        inventoryDB.update( {
-            _id: parseInt(req.body.id)
-        }, Product, {}, function (
-            err,
-            numReplaced,
-            product
-        ) {
-            if ( err ) res.status( 500 ).send( err );
-            else res.sendStatus( 200 );
-        } );
+    inventoryDB.findOne({ _id: Product._id }, function (err, doc) {
 
-    }
+        if ( err ) res.status( 500 ).send( err );
+
+        if (!doc) {
+
+            inventoryDB.insert( Product, function ( err, product ) {
+                if ( err ) res.status( 500 ).send( err );
+                else res.send( product );
+            });
+
+        } else {
+
+            inventoryDB.update( {
+                _id: parseInt(req.body.id)
+            }, Product, {}, function (
+                err,
+                numReplaced,
+                product
+            ) {
+                if ( err ) res.status( 500 ).send( err );
+                else res.sendStatus( 200 );
+            } );
+
+        }
+        
+    });
 
 });
 
@@ -175,4 +182,13 @@ app.decrementInventory = function ( products ) {
             }
         } );
     } );
+};
+
+
+app.deleteProductsByCategory = function (categoryId, callback) {
+    inventoryDB.remove({
+        category: categoryId
+    }, { multi: true }, function (err, numRemoved) {
+        callback(err, numRemoved);
+    });
 };

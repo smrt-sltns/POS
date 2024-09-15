@@ -136,53 +136,50 @@
                         <div class="row">
                            
 
-                            <div class="col-md-5">
-                                <div class="row">
-                                    <div class="col-md-8" id="productSales">
-                                            <h4>Products</h4>
-                                            <hr>
-                                            <table class="table tablesaw-enhanced" id="productsSold">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Sold</th>
-                                                        <th>Available</th> 
-                                                        <th>Sales</th>                                                                                                           
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="product_sales"></tbody>
-                                            </table>
+                            <div class="col-md-8" id="productSales">
+                                    <h4>Products</h4>
+                                    <hr>
+                                    <table class="table tablesaw-enhanced" id="productsSold">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Sold</th>
+                                                <th>Available</th> 
+                                                <th>Sales</th>                                                                                                           
+                                            </tr>
+                                        </thead>
+                                        <tbody id="product_sales"></tbody>
+                                    </table>
+                            </div>
+                            <div class="col-md-4" id="totals">
+                                    <h4>Total</h4>
+                                    <hr>
+                            
+                                    <div id="total_sales" class="btn-success">
+                                        <h5>SALES</h5>
+                                        <div id="counter">0</div>
                                     </div>
-                                    <div class="col-md-4" id="totals">
-                                            <h4>Total</h4>
-                                            <hr>
-                                    
-                                            <div id="total_sales" class="btn-success">
-                                                <h5>SALES</h5>
-                                                <div id="counter">0</div>
-                                            </div>
-                                       
-                                            <div id="total_transactions" class="btn-warning">
-                                                <h5>TRANSACTIONS</h5>
-                                                <div id="counter">0</div>
-                                            </div>
                                 
-                                            <div id="total_items" class="btn-info">
-                                                <h5>ITEMS</h5>
-                                                <div id="counter">0</div>
-                                            </div>
-
-                                            <div id="total_products" class="btn-default">
-                                                <h5>PRODUCTS</h5>
-                                                <div id="counter">0</div>
-                                            </div>
-                                                                         
+                                    <div id="total_transactions" class="btn-warning">
+                                        <h5>TRANSACTIONS</h5>
+                                        <div id="counter">0</div>
                                     </div>
-                                   
-                               </div>
-                           </div>
+                        
+                                    <div id="total_items" class="btn-info">
+                                        <h5>ITEMS</h5>
+                                        <div id="counter">0</div>
+                                    </div>
 
-                           <div class="col-md-7">
+                                    <div id="total_products" class="btn-default">
+                                        <h5>PRODUCTS</h5>
+                                        <div id="counter">0</div>
+                                    </div>
+                                                                    
+                            </div>
+                                   
+                        </div>                    
+
+                           <div class="row">
                             <table class="table tablesaw-enhanced" id="transactionList">
                                 <thead>
                                     <tr>                                                                      
@@ -194,6 +191,7 @@
                                         <th>Method</th>
                                         <th>Till</th>
                                         <th>Cashier</th>
+                                        <th>M-Pesa Code</th>
                                         <th>View</th>
                                     </tr>
                                 </thead>
@@ -201,7 +199,6 @@
                             </table>
                         </div>
 
-                      </div>                    
                 </div>
             </div>
         </div>
@@ -396,10 +393,10 @@
                   <div class="row">
                       <div class="col-md-4">
                           <div class="list-group">
-                              <a href="javascript:void(0)" id="cash" onclick="paymentType = 1" class="list-group-item active">
+                              <a href="javascript:void(0)" id="cash" onclick="paymentType = 0" class="list-group-item active">
                                   Cash
                               </a>
-                            <a href="javascript:void(0)" id="card" onclick="paymentType = 3" class="list-group-item">Card</a>
+                            <a href="javascript:void(0)" id="card" onclick="paymentType = 2" class="list-group-item">M-Pesa</a>
                           </div>
                       </div>
                       <div class="col-md-8">
@@ -473,8 +470,8 @@
                           </div>
                           <br>
                           <div class="input-group" id="cardInfo">
-                              <span class="input-group-addon" id="basic-addon3">Card Info </span>
-                              <input type="text" class="form-control" id="paymentInfo" aria-describedby="basic-addon3">
+                              <span class="input-group-addon" id="basic-addon3">M-Pesa Code</span>
+                              <input type="text" class="form-control" id="paymentInfo" aria-describedby="basic-addon3" maxlength="10">
                           </div>
                       </div>
                   </div>
@@ -543,7 +540,10 @@
                 </div>
                 <div class="modal-body">
                     <form id="saveProduct" encType="multipart/form-data">
-                        <input type="hidden" name="id" id="product_id">
+                        <div class="form-group">
+                            <label for="id">Barcode</label>
+                            <input type="number" required="required" name="id" placeholder="Barcode" class="form-control" id="product_id" maxlength="13">
+                        </div>
                         <input type="hidden" name="img" id="img">
                         <input type="hidden" name="remove" id="remove_img">
                         <div class="form-group">
@@ -556,11 +556,11 @@
                         </div>
                         <div class="form-group">
                             <label for="userName">Price</label>
-                            <input type="text" required="required" name="price" placeholder="Price" class="form-control" id="product_price">
+                            <input type="number" required="required" name="price" placeholder="Price" class="form-control" id="product_price">
                         </div>
                         <div class="form-group">
                             <label for="userName">Stock</label>
-                            <input type="text" name="quantity" placeholder="Available stock" class="form-control" id="quantity">
+                            <input type="number" name="quantity" placeholder="Available stock" class="form-control" id="quantity">
                         </div>
                         <div class="form-group">
                             <label><input type="checkbox" name="stock" id="stock" style="max-width: 30px; float: left;">  Disable stock check </label>

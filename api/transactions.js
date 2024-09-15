@@ -102,12 +102,12 @@ app.post("/new", function(req, res) {
   transactionsDB.insert(newTransaction, function(err, transaction) {    
     if (err) res.status(500).send(err);
     else {
-     res.sendStatus(200);
-
-     if(newTransaction.paid >= newTransaction.total){
+      
+      if(newTransaction.paid >= newTransaction.total){
         Inventory.decrementInventory(newTransaction.items);
-     }
-     
+      }
+      res.sendStatus(200);
+      
     }
   });
 });
