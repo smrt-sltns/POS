@@ -15,7 +15,6 @@
     "async": "^2.6.0",
     "body-parser": "^1.18.2",
     "btoa": "^1.2.1",
-    "electron": ">=13.6.6",
     "electron-context-menu": "^0.15.1",
     "electron-store": "^5.1.0",
     "electron-winstaller": "^4.0.0",
@@ -42,7 +41,7 @@
   "scripts": {
     "electron": "cross-env NODE_ENV=dev nodemon --exec \"\"electron .\"\"",
     "electron-build": "electron-builder",
-    "package-win": "electron-packager . POS --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/images/icon.ico --prune=true --out=release-builds --version-string.ProductName=\"POS\""
+    "package-win": "electron-packager . POS --overwrite --asar=false --platform=win32 --arch=x64 --icon=assets/images/icon.ico --prune=true --out=release-builds --electron-version=13.6.6 --version-string.ProductName=\"POS\""
   },
   "browserslist": {
     "production": [
