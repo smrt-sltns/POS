@@ -1,97 +1,85 @@
-const setupEvents = require('./installers/setupEvents')
- if (setupEvents.handleSquirrelEvent()) {
-    return;
- }
- 
+const setupEvents = require('./installers/setupEvents');
+if (setupEvents.handleSquirrelEvent()) {
+  return;
+}
+
 const server = require('./server');
-const backup_databases_and_images = require('./backup');
-const {app, BrowserWindow, ipcMain} = require('electron');
+const backup_databases_and_images = require('./backup'); // Corrected import
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 const contextMenu = require('electron-context-menu');
 
-let mainWindow
+let mainWindow;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1500,
     height: 1200,
     frame: false,
-    minWidth: 1200, 
+    minWidth: 1200,
     minHeight: 750,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
       contextIsolation: false
-    },
+    }
   });
 
   mainWindow.maximize();
   mainWindow.show();
 
-  mainWindow.loadURL(
-    `file://${path.join(__dirname, 'index.html')}`
-  )
+  mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`);
 
   mainWindow.on('closed', () => {
-    backup_databases_and_images();
-    mainWindow = null;
-  })
+    (async () => {
+      await backup_databases_and_images();
+      mainWindow = null;
+    })();
+  });
 }
 
-
-app.on('ready', createWindow)
+app.on('ready', createWindow);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    backup_databases_and_images();
-    app.quit();
+    (async () => {
+      await backup_databases_and_images();
+      app.quit();
+    })();
   }
-})
+});
 
 app.on('activate', () => {
   if (mainWindow === null) {
-    createWindow()
+    createWindow();
   }
-})
-
-
+});
 
 ipcMain.on('app-quit', (evt, arg) => {
-  backup_databases_and_images();
-  app.quit();
-})
-
+  (async () => {
+    await backup_databases_and_images();
+    app.quit();
+  })();
+});
 
 ipcMain.on('app-reload', (event, arg) => {
   mainWindow.reload();
 });
 
-
-
 contextMenu({
   prepend: (params, browserWindow) => [
-     
-      {label: 'DevTools',
-       click(item, focusedWindow){
+    {
+      label: 'DevTools',
+      click(item, focusedWindow) {
         focusedWindow.toggleDevTools();
       }
     },
-     { 
-      label: "Reload", 
-        click() {
-          mainWindow.reload();
-      } 
-    // },
-    // {  label: 'Quit',  click:  function(){
-    //    mainWindow.destroy();
-    //     mainWindow.quit();
-    // } 
-  }  
-  ],
-
+    {
+      label: 'Reload',
+      click() {
+        mainWindow.reload();
+      }
+    }
+  ]
 });
-
- 
-
- 
