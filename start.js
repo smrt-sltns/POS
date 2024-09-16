@@ -4,8 +4,9 @@ const setupEvents = require('./installers/setupEvents')
  }
  
 const server = require('./server');
+const backup_databases_and_images = require('./backup');
 const {app, BrowserWindow, ipcMain} = require('electron');
-const path = require('path')
+const path = require('path');
 
 const contextMenu = require('electron-context-menu');
 
@@ -33,7 +34,8 @@ function createWindow() {
   )
 
   mainWindow.on('closed', () => {
-    mainWindow = null
+    backup_databases_and_images();
+    mainWindow = null;
   })
 }
 
@@ -42,7 +44,8 @@ app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    backup_databases_and_images();
+    app.quit();
   }
 })
 
@@ -55,7 +58,8 @@ app.on('activate', () => {
 
 
 ipcMain.on('app-quit', (evt, arg) => {
-  app.quit()
+  backup_databases_and_images();
+  app.quit();
 })
 
 
