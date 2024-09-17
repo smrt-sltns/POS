@@ -1,38 +1,101 @@
 const fs = require('fs');
 const path = require('path');
-const util = require('util');
-const fse = require('fs-extra'); // For easier copying of directories
-const mkdir = util.promisify(fs.mkdir);
+const archiver = require('archiver');
+const fse = require('fs-extra');
+const nodemailer = require('nodemailer'); 
 
-const rootDir = process.env.APPDATA+"/POS";
+const rootDir = process.env.APPDATA + "/POS";
 const databasesDir = path.join(rootDir, 'server', 'databases');
 const uploadsDir = path.join(rootDir, 'uploads');
-const backupDir = path.join(rootDir, 'backups', new Date().toISOString().slice(0, 10)); 
-const backupDatabasesDir = path.join(backupDir, 'databases');
-const backupUploadsDir = path.join(backupDir, 'uploads');
+const backupDir = path.join(rootDir, 'backups'); 
+const zipFilePath = path.join(backupDir, `backup-${new Date().toISOString().slice(0, 10)}.zip`); 
 
 async function backup_databases_and_images() {
     try {
-        // Ensure the backup directory exists
+        
         if (!fs.existsSync(backupDir)) {
-            await mkdir(backupDir, { recursive: true });
-            await mkdir(backupDatabasesDir, { recursive: true });
-            await mkdir(backupUploadsDir, { recursive: true });
-            console.log(`Created backup directory: ${backupDir}`);
+            await fse.mkdir(backupDir, { recursive: true });
+            console.log(`Created backups directory: ${backupDir}`);
         }
 
-        // Copy the databases folder
-        await fse.copy(databasesDir, backupDatabasesDir);
-        console.log(`Copied databases folder to: ${backupDatabasesDir}`);
-
-        // Copy the uploads folder
-        await fse.copy(uploadsDir, backupUploadsDir);
-        console.log(`Copied uploads folder to: ${backupUploadsDir}`);
-
-        console.log('Backup completed successfully.');
+        await zipBackupFolder();
+        
+        await sendBackupEmail();
+        
+        console.log('Backup, zipping, and email sending completed successfully.');
     } catch (err) {
-        console.error('Error during backup:', err);
+        console.error('Error during backup or email sending:', err);
     }
+}
+
+async function zipBackupFolder() {
+    return new Promise((resolve, reject) => {
+        const output = fs.createWriteStream(zipFilePath);
+        const archive = archiver('zip', { zlib: { level: 9 } }); 
+
+        output.on('close', () => {
+            console.log(`Zip file created successfully at ${zipFilePath} (${archive.pointer()} total bytes)`);
+            resolve();
+        });
+
+        archive.on('warning', err => {
+            if (err.code === 'ENOENT') {
+                console.warn('Warning:', err);
+            } else {
+                reject(err);
+            }
+        });
+
+        archive.on('error', err => {
+            reject(err);
+        });
+
+        
+        archive.pipe(output);
+
+        
+        archive.directory(databasesDir, 'databases'); 
+        archive.directory(uploadsDir, 'uploads');     
+
+        
+        archive.finalize();
+    });
+}
+
+async function sendBackupEmail() {
+    
+    let transporter = nodemailer.createTransport({
+        service: 'gmail', 
+        auth: {
+            user: 'coboaccess@gmail.com', 
+            pass: 'erxenrgmiefnhgkv'   
+        }
+    });
+
+    
+    let mailOptions = {
+        from: '"POS Backup" <coboaccess@gmail.com>', 
+        to: 'coboaccess@gmail.com, georgeyoumansjr@gmail.com', 
+        subject: 'POS Backup - ' + new Date().toISOString().slice(0, 10), 
+        text: 'Attached is the backup of your POS system databases and uploads.', 
+        attachments: [
+            {
+                filename: path.basename(zipFilePath), 
+                path: zipFilePath 
+            }
+        ]
+    };
+
+    
+    return new Promise((resolve, reject) => {
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return reject(error);
+            }
+            console.log(`Backup email sent: ${info.response}`);
+            resolve();
+        });
+    });
 }
 
 module.exports = backup_databases_and_images;
