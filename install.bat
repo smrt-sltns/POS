@@ -4,7 +4,8 @@ setlocal
 :: Check if Node.js (npm) is installed
 where node >nul 2>nul
 if %errorlevel% neq 0 (
-    echo Node.js is not installed. Please install Node.js manually or run install_node.bat file as admin to install it automatically before proceeding.
+    echo Node.js is not installed. Installing it right now...
+    call powershell -Command "Start-Process cmd -ArgumentList '/c install_node.bat' -Verb RunAs"
     pause
     exit /b
 )
