@@ -7,9 +7,14 @@ set "REPO_URL=https://github.com/smrt-sltns/POS"
 :: Check if Git is installed
 where git >nul 2>nul
 if %errorlevel% neq 0 (
-    echo Git is not installed. Please install Git before proceeding.
-    pause
-    exit /b
+    echo Git is not installed. Installing Git...
+    choco install git -y
+
+    if %errorlevel% neq 0 (
+        echo Failed to install Git.
+        pause
+        exit /b
+    )
 )
 
 :: Clone the repository
