@@ -17,7 +17,7 @@ if %errorlevel% neq 0 (
 
 :: Install Node.js version 18.19.1 using Chocolatey  // 18.19.1 is the old version. if there is a problem, just go back to this one
 echo Installing Node.js v20.16.0 using Chocolatey...
-choco install nodejs --version=v20.16.0 -y
+choco install nodejs --version=20.16.0 -y
 if %errorlevel% neq 0 (
     echo Error: Failed to install Node.js via Chocolatey.
     pause

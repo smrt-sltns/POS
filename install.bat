@@ -58,7 +58,7 @@ set SHORTCUT_NAME=POS.lnk
 set SHORTCUT_PATH=%USERPROFILE%\Desktop\%SHORTCUT_NAME%
 
 :: Check if the OneDrive exists
-if not exist "%SHORTCUT_PATH%" (
+if exist "%USERPROFILE%\OneDrive\Desktop" (
     set SHORTCUT_PATH=%USERPROFILE%\OneDrive\Desktop\%SHORTCUT_NAME%
 )
 
