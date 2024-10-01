@@ -14,6 +14,8 @@ let usersDB = new Datastore( {
 } );
 
 
+app.db = usersDB;
+
 usersDB.ensureIndex({ fieldName: '_id', unique: true });
 
 

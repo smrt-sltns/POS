@@ -3,6 +3,7 @@ const path = require('path');
 const JSZip = require('jszip'); 
 const fse = require('fs-extra');
 const nodemailer = require('nodemailer');
+const backup_to_sheets = require('./backup_to_sheets');
 
 const rootDir = process.env.APPDATA + "/POS";
 const databasesDir = path.join(rootDir, 'server', 'databases');
@@ -18,6 +19,7 @@ async function backup_databases_and_images() {
             console.log(`Created backups directory: ${backupDir}`);
         }
         
+        await backup_to_sheets();
         await zipBackupFolder();
         await sendBackupEmail();
 

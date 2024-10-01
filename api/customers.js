@@ -17,6 +17,7 @@ let customerDB = new Datastore( {
 
 customerDB.ensureIndex({ fieldName: '_id', unique: true });
 
+app.db = customerDB;
 
 app.get( "/", function ( req, res ) {
     res.send( "Customer API" );

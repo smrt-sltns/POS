@@ -1,7 +1,11 @@
-/node_modules
 undefined
 /release-builds
 /dist
 
 yarn.lock
 package-lock.json
+token.json
+# credentials.json
+
+.env
+node_modules

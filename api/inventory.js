@@ -29,6 +29,7 @@ let inventoryDB = new Datastore( {
     autoload: true
 } );
 
+app.db = inventoryDB;
 
 inventoryDB.ensureIndex({ fieldName: '_id', unique: true });
 
@@ -122,7 +123,7 @@ app.post( "/product", upload.single('imagename'), function ( req, res ) {
             } );
 
         }
-        
+
     });
 
 });

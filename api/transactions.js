@@ -12,7 +12,7 @@ let transactionsDB = new Datastore({
   filename: process.env.APPDATA+"/POS/server/databases/transactions.db",
   autoload: true
 });
-
+app.db = transactionsDB;
 
 transactionsDB.ensureIndex({ fieldName: '_id', unique: true });
 

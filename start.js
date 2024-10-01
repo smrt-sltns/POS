@@ -31,11 +31,40 @@ function createWindow() {
 
   mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`);
 
-  mainWindow.on('closed', () => {
-    (async () => {
-      await backup_databases_and_images();
-      mainWindow = null;
-    })();
+  mainWindow.on('closed', (event) => {
+    event.preventDefault();
+
+    try {
+        console.log('Starting backup before closing the window...');
+        
+        // Await the backup to sheets function
+        backup_databases_and_images()
+        .then( promise => {
+          console.log(promise);
+          
+          console.log("done and asdlashdlkashdlkasjdlkasjdlkasjd");
+          // Once backup is done, remove the event listener to prevent loop and close the window
+          mainWindow.removeAllListeners('close');
+          try {
+            console.log('Backup complete. Now closing the window...');
+            mainWindow.close();  // Now proceed with closing the window
+            
+          } catch (error) {
+            
+            console.error('Error during window close backup:', error);
+          }
+
+        } ).catch(err => {
+
+          console.error('Error during window close backup:', err);
+          mainWindow.close();  // Ensure the window still closes even if there's an error
+
+        });
+
+    } catch (error) {
+        console.error('Error during window close backup:', error);
+        mainWindow.close();  // Ensure the window still closes even if there's an error
+    }
   });
 }
 
@@ -58,7 +87,8 @@ app.on('activate', () => {
 
 ipcMain.on('app-quit', (evt, arg) => {
   (async () => {
-    await backup_databases_and_images();
+
+    // await backup_databases_and_images();
     app.quit();
   })();
 });
