@@ -7,7 +7,6 @@ const server = require('./server');
 const backup_databases_and_images = require('./backup'); // Corrected import
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-
 const contextMenu = require('electron-context-menu');
 
 let mainWindow;
@@ -22,49 +21,17 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
-      contextIsolation: false
-    }
+      contextIsolation: false,
+    },
   });
 
   mainWindow.maximize();
   mainWindow.show();
-
   mainWindow.loadURL(`file://${path.join(__dirname, 'index.html')}`);
 
-  mainWindow.on('closed', (event) => {
-    event.preventDefault();
-
-    try {
-        console.log('Starting backup before closing the window...');
-        
-        // Await the backup to sheets function
-        backup_databases_and_images()
-        .then( promise => {
-          console.log(promise);
-          
-          console.log("done and asdlashdlkashdlkasjdlkasjdlkasjd");
-          // Once backup is done, remove the event listener to prevent loop and close the window
-          mainWindow.removeAllListeners('close');
-          try {
-            console.log('Backup complete. Now closing the window...');
-            mainWindow.close();  // Now proceed with closing the window
-            
-          } catch (error) {
-            
-            console.error('Error during window close backup:', error);
-          }
-
-        } ).catch(err => {
-
-          console.error('Error during window close backup:', err);
-          mainWindow.close();  // Ensure the window still closes even if there's an error
-
-        });
-
-    } catch (error) {
-        console.error('Error during window close backup:', error);
-        mainWindow.close();  // Ensure the window still closes even if there's an error
-    }
+  mainWindow.on('close', async (event) => {
+    mainWindow.removeAllListeners('close');
+    mainWindow.close(); // Ensure window closes even if there's an error
   });
 }
 
@@ -73,8 +40,13 @@ app.on('ready', createWindow);
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     (async () => {
-      await backup_databases_and_images();
-      app.quit();
+      try {
+        // await backup_databases_and_images(); // Wait for the backup to finish
+        app.quit(); // Quit after the backup
+      } catch (error) {
+        console.error('Error during app quit backup:', error);
+        app.quit(); // Quit even if the backup fails
+      }
     })();
   }
 });
@@ -85,31 +57,36 @@ app.on('activate', () => {
   }
 });
 
-ipcMain.on('app-quit', (evt, arg) => {
-  (async () => {
-
-    // await backup_databases_and_images();
+// IPC event for quitting the app
+ipcMain.on('app-quit', async (evt, arg) => {
+  try {
+    await backup_databases_and_images(); // Ensure backup before quit
     app.quit();
-  })();
+  } catch (error) {
+    console.error('Error during app quit backup:', error);
+    app.quit(); // Quit even if the backup fails
+  }
 });
 
+// IPC event for reloading the app
 ipcMain.on('app-reload', (event, arg) => {
   mainWindow.reload();
 });
 
+// Context menu setup
 contextMenu({
   prepend: (params, browserWindow) => [
     {
       label: 'DevTools',
       click(item, focusedWindow) {
         focusedWindow.toggleDevTools();
-      }
+      },
     },
     {
       label: 'Reload',
       click() {
         mainWindow.reload();
-      }
-    }
-  ]
+      },
+    },
+  ],
 });

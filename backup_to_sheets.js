@@ -61,14 +61,16 @@ async function backup_to_sheets() {
             "sheetData": sheetData
         }
 
-        const response = await axios.post(SHEETS_SERVER_URL, dataToPost);
+        console.log('Sending data to server...');
+        console.log(SHEETS_SERVER_URL);
 
-        console.log('Server Response:', response.data);
+        const response = await axios.post(SHEETS_SERVER_URL, dataToPost);
+        return response;
 
     } catch (error) {
         console.error('Error occurred while sending POST request:', error);
+        throw error;
     }
-    return sheetData;
 }
 
 
